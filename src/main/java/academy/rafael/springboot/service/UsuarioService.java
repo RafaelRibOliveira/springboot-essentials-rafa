@@ -7,6 +7,8 @@ import academy.rafael.springboot.repository.UsuarioRepository;
 import academy.rafael.springboot.requests.UsuarioPostRequestBody;
 import academy.rafael.springboot.requests.UsuarioPutRequestBody;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,10 +22,15 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
 
-    public List<Usuario> listAll() {
-        return usuarioRepository.findAll();
+    public Page<Usuario> listAll(Pageable pageable) {
+        return usuarioRepository.findAll(pageable);
 
     }
+        public List<Usuario> listAllNonPageable() {
+            return usuarioRepository.findAll();
+
+    }
+
 
     public List<Usuario> findByName(String name) {
         return usuarioRepository.findByName(name);
@@ -48,4 +55,6 @@ public class UsuarioService {
        usuario.setId(saveUsuario.getId());
        usuarioRepository.save(usuario);
     }
+
+
 }

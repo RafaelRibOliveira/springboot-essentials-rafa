@@ -8,6 +8,8 @@ import academy.rafael.springboot.service.UsuarioService;
 import academy.rafael.springboot.util.DateUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,13 +25,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UsuarioController {
     private final DateUtil dateUtil;
-
     private final UsuarioService usuarioService;
 
     @GetMapping
-    public ResponseEntity<List<Usuario>> list() {
+    public ResponseEntity<Page<Usuario>> list(Pageable pageable) {
         log.info(dateUtil.formatLocalDateTimeToDatabasesStyle(LocalDateTime.now()));
-        return ResponseEntity.ok(usuarioService.listAll());
+        return ResponseEntity.ok(usuarioService.listAll(pageable));
+    }
+    @GetMapping(path = "/all")
+    public ResponseEntity<List<Usuario>> listAll() {
+        log.info(dateUtil.formatLocalDateTimeToDatabasesStyle(LocalDateTime.now()));
+        return ResponseEntity.ok(usuarioService.listAllNonPageable());
     }
 
     @GetMapping(path = "/{id}")
