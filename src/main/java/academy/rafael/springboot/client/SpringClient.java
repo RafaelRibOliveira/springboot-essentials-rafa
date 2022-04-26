@@ -14,8 +14,7 @@ import java.util.List;
 public class SpringClient {
     public static void main(String[] args) {
         ResponseEntity<Usuario> entity = new RestTemplate().getForEntity("http://LocalHost:8080/usuarios/{id}",
-                Usuario.class,2);
-
+                Usuario.class);
         log.info(entity);
 
         Usuario object = new RestTemplate().getForObject("http://LocalHost:8080/usuarios/{id}", Usuario.class,2);
@@ -37,32 +36,32 @@ public class SpringClient {
 //       Usuario kingdomSaved = new RestTemplate().postForObject("http://LocalHost:8080/usuarios/", kingdom, Usuario.class);
 //       log.info("saved usuario{}", kingdom);
 
-        Usuario karen = Usuario.builder().name("karen").build();
-        ResponseEntity<Usuario> karenSaved = new RestTemplate().exchange("http://LocalHost:8080/usuarios/",
+        Usuario rafa = Usuario.builder().name("rafa").build();
+        ResponseEntity<Usuario> rafaSaved = new RestTemplate().exchange("http://LocalHost:8080/usuarios/",
                 HttpMethod.POST,
-                new HttpEntity<>(karen, createJsonHeader()),
+                new HttpEntity<>(rafa, createJsonHeader()),
                 Usuario.class);
 
-        log.info("saved usuario{}", karenSaved);
+        log.info("saved usuario{}", rafaSaved);
 
-        Usuario usuarioToBeUpdated = karenSaved.getBody();
-        usuarioToBeUpdated.setName("karen 2");
+        Usuario usuarioToBeUpdated = rafaSaved.getBody();
+        usuarioToBeUpdated.setName("rafa 2");
 
-        ResponseEntity<Void> karenUpdated = new RestTemplate().exchange("http://LocalHost:8080/usuarios/",
+        ResponseEntity<Void> rafaUpdated = new RestTemplate().exchange("http://LocalHost:8080/usuarios/",
                 HttpMethod.PUT,
                 new HttpEntity<>(usuarioToBeUpdated, createJsonHeader()),
                 Void.class);
 
-        log.info(karenUpdated);
+        log.info(rafaUpdated);
 
 
-        ResponseEntity<Void> karenDeleted = new RestTemplate().exchange("http://LocalHost:8080/usuarios/{id}",
+        ResponseEntity<Void> rafaDeleted = new RestTemplate().exchange("http://LocalHost:8080/usuarios/{id}",
                 HttpMethod.DELETE,
                 null,
                 Void.class,
                 usuarioToBeUpdated.getId());
 
-        log.info(karenDeleted);
+        log.info(rafaDeleted);
 
     }
     private static HttpHeaders createJsonHeader() {

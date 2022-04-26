@@ -26,17 +26,17 @@ public class UsuarioService {
         return usuarioRepository.findAll(pageable);
 
     }
-        public List<Usuario> listAllNonPageable() {
-            return usuarioRepository.findAll();
+
+    public List<Usuario> listAllNonPageable() {
+        return usuarioRepository.findAll();
 
     }
-
 
     public List<Usuario> findByName(String name) {
         return usuarioRepository.findByName(name);
     }
 
-    public Usuario findByidOrThrowBadRequestException(long id) {
+    public Usuario findByIdOrThrowBadRequestException(long id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException("Usuario not Found"));
     }
@@ -46,13 +46,13 @@ public class UsuarioService {
     }
 
     public void delete(long id) {
-        usuarioRepository.delete(findByidOrThrowBadRequestException(id));
+        usuarioRepository.delete(findByIdOrThrowBadRequestException(id));
     }
 
     public void replace(UsuarioPutRequestBody usuarioPutRequestBody) {
-       Usuario saveUsuario = findByidOrThrowBadRequestException(usuarioPutRequestBody.getId());
+       Usuario savedUsuario = findByIdOrThrowBadRequestException(usuarioPutRequestBody.getId());
        Usuario usuario = UsuarioMapper.INSTANCE.toUsuario(usuarioPutRequestBody);
-       usuario.setId(saveUsuario.getId());
+       usuario.setId(savedUsuario.getId());
        usuarioRepository.save(usuario);
     }
 

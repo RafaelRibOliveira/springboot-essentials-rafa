@@ -5,7 +5,6 @@ import academy.rafael.springboot.domain.Usuario;
 import academy.rafael.springboot.requests.UsuarioPostRequestBody;
 import academy.rafael.springboot.requests.UsuarioPutRequestBody;
 import academy.rafael.springboot.service.UsuarioService;
-import academy.rafael.springboot.util.DateUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
@@ -15,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -24,23 +22,21 @@ import java.util.List;
 @Log4j2
 @RequiredArgsConstructor
 public class UsuarioController {
-    private final DateUtil dateUtil;
     private final UsuarioService usuarioService;
 
     @GetMapping
     public ResponseEntity<Page<Usuario>> list(Pageable pageable) {
-        log.info(dateUtil.formatLocalDateTimeToDatabasesStyle(LocalDateTime.now()));
         return ResponseEntity.ok(usuarioService.listAll(pageable));
     }
+
     @GetMapping(path = "/all")
     public ResponseEntity<List<Usuario>> listAll() {
-        log.info(dateUtil.formatLocalDateTimeToDatabasesStyle(LocalDateTime.now()));
         return ResponseEntity.ok(usuarioService.listAllNonPageable());
     }
 
     @GetMapping(path = "/{id}")
     public ResponseEntity<Usuario> findById(@PathVariable long id){
-        return ResponseEntity.ok(usuarioService.findByidOrThrowBadRequestException(id));
+        return ResponseEntity.ok(usuarioService.findByIdOrThrowBadRequestException(id));
 
     }
     @GetMapping(path = "/find")

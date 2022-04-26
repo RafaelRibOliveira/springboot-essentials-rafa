@@ -37,6 +37,8 @@ public class ResExceptionHandler extends ResponseEntityExceptionHandler {
                         .build(), HttpStatus.BAD_REQUEST);
 
     }
+
+    @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException exception, HttpHeaders headers, HttpStatus status, WebRequest request) {
         List<FieldError> fieldErrors = exception.getBindingResult().getFieldErrors();
