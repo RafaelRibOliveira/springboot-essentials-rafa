@@ -13,19 +13,19 @@ import java.util.List;
 @Log4j2
 public class SpringClient {
     public static void main(String[] args) {
-        ResponseEntity<Usuario> entity = new RestTemplate().getForEntity("http://LocalHost:8080/usuarios/{id}",
-                Usuario.class);
+        ResponseEntity<Usuario> entity = new RestTemplate().getForEntity("http://localhost:8080/usuarios/{id}",
+                Usuario.class, 2);
         log.info(entity);
 
-        Usuario object = new RestTemplate().getForObject("http://LocalHost:8080/usuarios/{id}", Usuario.class,2);
+        Usuario object = new RestTemplate().getForObject("http://localhost:8080/usuarios/{id}", Usuario.class,2);
 
         log.info(object);
 
-        Usuario[] usuarios = new RestTemplate().getForObject("http://LocalHost:8080/usuarios/all", Usuario[].class);
+        Usuario[] usuarios = new RestTemplate().getForObject("http://localhost:8080/usuarios/all", Usuario[].class);
 
         log.info(Arrays.toString(usuarios));
         //formatter:off
-        ResponseEntity<List<Usuario>> exchange = new RestTemplate().exchange("http://LocalHost:8080/usuarios/all",
+        ResponseEntity<List<Usuario>> exchange = new RestTemplate().exchange("http://localhost:8080/usuarios/all",
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {});
@@ -33,11 +33,11 @@ public class SpringClient {
         log.info(exchange.getBody());
 
 //        Usuario kingdom = Usuario.builder().name("kingdom").build();
-//       Usuario kingdomSaved = new RestTemplate().postForObject("http://LocalHost:8080/usuarios/", kingdom, Usuario.class);
+//       Usuario kingdomSaved = new RestTemplate().postForObject("http://lçocalhost:8080/usuarios/", kingdom, Usuario.class);
 //       log.info("saved usuario{}", kingdom);
 
         Usuario rafa = Usuario.builder().name("rafa").build();
-        ResponseEntity<Usuario> rafaSaved = new RestTemplate().exchange("http://LocalHost:8080/usuarios/",
+        ResponseEntity<Usuario> rafaSaved = new RestTemplate().exchange("http://localhost:8080/usuarios/",
                 HttpMethod.POST,
                 new HttpEntity<>(rafa, createJsonHeader()),
                 Usuario.class);
@@ -47,7 +47,7 @@ public class SpringClient {
         Usuario usuarioToBeUpdated = rafaSaved.getBody();
         usuarioToBeUpdated.setName("rafa 2");
 
-        ResponseEntity<Void> rafaUpdated = new RestTemplate().exchange("http://LocalHost:8080/usuarios/",
+        ResponseEntity<Void> rafaUpdated = new RestTemplate().exchange("http://localhost:8080/usuarios/",
                 HttpMethod.PUT,
                 new HttpEntity<>(usuarioToBeUpdated, createJsonHeader()),
                 Void.class);
@@ -55,7 +55,7 @@ public class SpringClient {
         log.info(rafaUpdated);
 
 
-        ResponseEntity<Void> rafaDeleted = new RestTemplate().exchange("http://LocalHost:8080/usuarios/{id}",
+        ResponseEntity<Void> rafaDeleted = new RestTemplate().exchange("http://localhost:8080/usuarios/{id}",
                 HttpMethod.DELETE,
                 null,
                 Void.class,

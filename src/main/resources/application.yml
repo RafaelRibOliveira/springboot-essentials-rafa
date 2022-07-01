@@ -3,16 +3,29 @@ server:
         include-stacktrace: on_param
 
 spring:
-    datasource:
+  application:
+    name: spring-test
+  datasource:
         url: jdbc:mysql://localhost:3306/academydb?&createDatabaseIfNotExist=true
         username: root
         password: root
-    jpa:
-        hibernate:
-            ddl-auto: update
+  jpa:
+    hibernate:
+        ddl-auto: update
 
 logging:
     level:
         org:
             hibernate:
                 SQL: DEBUG
+
+management:
+    endpoints:
+        web:
+         exposure:
+             include: info, health, metrics, prometheus
+
+info:
+    app: Spring Boot 2 Essentials By DevRafa
+    website: https:// devrafa.academy
+    github: https://github.com/RafaelRibOliveira

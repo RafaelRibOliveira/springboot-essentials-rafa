@@ -1,7 +1,9 @@
 package academy.rafael.springboot.integration;
 
 
+import academy.rafael.springboot.domain.DevUser;
 import academy.rafael.springboot.domain.Usuario;
+import academy.rafael.springboot.repository.DevUserRepository;
 import academy.rafael.springboot.repository.UsuarioRepository;
 import academy.rafael.springboot.requests.UsuarioPostRequestBody;
 import academy.rafael.springboot.util.UsuarioCreator;
@@ -11,10 +13,15 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -29,20 +36,57 @@ import java.util.List;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class UsuarioControllerIT {
     @Autowired
-    private TestRestTemplate testRestTemplate;
-    @LocalServerPort
-    private int port;
+    @Qualifier(value = "testRestTemplateRoleUser")
+    private TestRestTemplate testRestTemplateRoleUser;
+    @Autowired
+    @Qualifier(value = "testRestTemplateRoleAdmin")
+    private TestRestTemplate testRestTemplateRoleAdmin;
     @Autowired
     private UsuarioRepository usuarioRepository;
+    @Autowired
+    private DevUserRepository devUserRepository;
+    private static final DevUser USER = DevUser.builder()
+            .name("DevUser Academy")
+            .password("{bcrypt}$2a$10$hSTIR1LEGbkA6US1B0IJVeoTsHrFKzPwXSeE40SvIFckopmMHoUTm")
+            .username("devuser")
+            .authorities("ROLE_USER")
+            .build();
 
+    private static final DevUser ADMIN = DevUser.builder()
+            .name("William Suane")
+            .password("{bcrypt}$2a$10$hSTIR1LEGbkA6US1B0IJVeoTsHrFKzPwXSeE40SvIFckopmMHoUTm")
+            .username("william")
+            .authorities("ROLE_USER,ROLE_ADMIN")
+            .build();
+
+    @TestConfiguration
+    @Lazy
+    static class config {
+        @Bean(name = "testRestTemplateRoleUser")
+        public TestRestTemplate testRestTemplateRoleUserCreator(@Value("${local.server.port}") int port){
+         RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder()
+                 .rootUri("http://localhost:"+port)
+                 .basicAuthentication("devRafa", "academy");
+            return new TestRestTemplate(restTemplateBuilder);
+        }
+        @Bean(name = "testRestTemplateRoleAdmin")
+        public TestRestTemplate testRestTemplateRoleAdminCreator(@Value("${local.server.port}") int port) {
+            RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder()
+                    .rootUri("http://localhost:"+port)
+                    .basicAuthentication("william", "academy");
+            return new TestRestTemplate(restTemplateBuilder);
+        }
+
+    }
     @Test
     @DisplayName("list returns list of usuario inside page object when successful")
     void list_ReturnsListOfUsuariosInsidePageObject_WhenSuccessful() {
         Usuario savedUsuario = usuarioRepository.save(UsuarioCreator.createUsuarioToBeSaved());
+        devUserRepository.save(USER);
 
         String expectedName = savedUsuario.getName();
 
-        PageableResponse<Usuario> usuarioPage = testRestTemplate.exchange("/usuarios", HttpMethod.GET, null,
+        PageableResponse<Usuario> usuarioPage = testRestTemplateRoleUser.exchange("/usuarios", HttpMethod.GET, null,
                 new ParameterizedTypeReference<PageableResponse<Usuario>>() {
                 }).getBody();
 
@@ -59,10 +103,11 @@ class UsuarioControllerIT {
     @DisplayName("listAll returns list of usuario when successful")
     void listAll_ReturnsListOfUsuario_WhenSuccessful() {
         Usuario savedUsuario = usuarioRepository.save(UsuarioCreator.createUsuarioToBeSaved());
+        devUserRepository.save(USER);
 
         String expectedName = savedUsuario.getName();
 
-        List<Usuario> usuarios = testRestTemplate.exchange("/usuarios/all", HttpMethod.GET, null,
+        List<Usuario> usuarios = testRestTemplateRoleUser.exchange("/usuarios/all", HttpMethod.GET, null,
                 new ParameterizedTypeReference<List<Usuario>>() {
                 }).getBody();
 
@@ -78,10 +123,11 @@ class UsuarioControllerIT {
     @DisplayName("findById returns usuario when successful")
     void findById_ReturnsUsuario_WhenSuccessful() {
         Usuario savedUsuario = usuarioRepository.save(UsuarioCreator.createUsuarioToBeSaved());
+        devUserRepository.save(USER);
 
         Long expectedId = savedUsuario.getId();
 
-        Usuario usuario = testRestTemplate.getForObject("/usuarios/{id}", Usuario.class, expectedId);
+        Usuario usuario = testRestTemplateRoleUser.getForObject("/usuarios/{id}", Usuario.class, expectedId);
 
         Assertions.assertThat(usuario).isNotNull();
 
@@ -92,12 +138,13 @@ class UsuarioControllerIT {
     @DisplayName("findByName returns a list of usuario when successful")
     void findByName_ReturnsListOfUsuario_WhenSuccessful(){
         Usuario savedUsuario = usuarioRepository.save(UsuarioCreator.createUsuarioToBeSaved());
+        devUserRepository.save(USER);
 
         String expectedName = savedUsuario.getName();
 
         String url = String.format("/usuarios/find?name=%s", expectedName);
 
-        List<Usuario> usuarios = testRestTemplate.exchange(url, HttpMethod.GET, null,
+        List<Usuario> usuarios = testRestTemplateRoleUser.exchange(url, HttpMethod.GET, null,
                 new ParameterizedTypeReference<List<Usuario>>() {
                 }).getBody();
 
@@ -112,7 +159,9 @@ class UsuarioControllerIT {
     @Test
     @DisplayName("findByName returns an empty list of usuario when usuario is not found")
     void findByName_ReturnsEmptyListOfUsuario_WhenUsuarioIsNotFound(){
-        List<Usuario> usuarios = testRestTemplate.exchange("/usuarios/find?name=dbz", HttpMethod.GET, null,
+        devUserRepository.save(USER);
+
+        List<Usuario> usuarios = testRestTemplateRoleUser.exchange("/usuarios/find?name=dbz", HttpMethod.GET, null,
                 new ParameterizedTypeReference<List<Usuario>>() {
                 }).getBody();
 
@@ -125,9 +174,11 @@ class UsuarioControllerIT {
     @Test
     @DisplayName("save returns usuario when successful")
     void save_ReturnsUsuario_WhenSuccessful(){
+        devUserRepository.save(USER);
+
         UsuarioPostRequestBody usuarioPostRequestBody = UsuarioPostRequestBodyCreator.createUsuarioPostRequestBody();
 
-        ResponseEntity<Usuario> usuarioResponseEntity = testRestTemplate.postForEntity("/usuarios", usuarioPostRequestBody, Usuario.class);
+        ResponseEntity<Usuario> usuarioResponseEntity = testRestTemplateRoleUser.postForEntity("/usuarios", usuarioPostRequestBody, Usuario.class);
 
         Assertions.assertThat(usuarioResponseEntity).isNotNull();
         Assertions.assertThat(usuarioResponseEntity.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -140,10 +191,11 @@ class UsuarioControllerIT {
     @DisplayName("replace updates usuario when successful")
     void replace_UpdatesUsuario_WhenSuccessful(){
         Usuario savedUsuario = usuarioRepository.save(UsuarioCreator.createUsuarioToBeSaved());
+        devUserRepository.save(USER);
 
         savedUsuario.setName("new name");
 
-        ResponseEntity<Void> usuarioResponseEntity = testRestTemplate.exchange("/usuarios",
+        ResponseEntity<Void> usuarioResponseEntity = testRestTemplateRoleUser.exchange("/usuarios",
                 HttpMethod.PUT,new HttpEntity<>(savedUsuario), Void.class);
 
         Assertions.assertThat(usuarioResponseEntity).isNotNull();
@@ -155,13 +207,28 @@ class UsuarioControllerIT {
     @DisplayName("delete removes usuario when successful")
     void delete_RemovesUsuario_WhenSuccessful(){
         Usuario savedUsuario = usuarioRepository.save(UsuarioCreator.createUsuarioToBeSaved());
+        devUserRepository.save(ADMIN);
 
-        ResponseEntity<Void> usuarioResponseEntity = testRestTemplate.exchange("/usuarios/{id}",
+        ResponseEntity<Void> usuarioResponseEntity = testRestTemplateRoleAdmin.exchange("/usuarios/{id}",
                 HttpMethod.DELETE,null, Void.class, savedUsuario.getId());
 
         Assertions.assertThat(usuarioResponseEntity).isNotNull();
 
         Assertions.assertThat(usuarioResponseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+    }
+
+    @Test
+    @DisplayName("delete returns 403 when user is not admin")
+    void delete_Returns403_WhenUserIsNotAdmin() {
+        Usuario savedUsuario = usuarioRepository.save(UsuarioCreator.createUsuarioToBeSaved());
+        devUserRepository.save(USER);
+
+        ResponseEntity<Void> usuarioResponseEntity = testRestTemplateRoleUser.exchange("/usuarios/admin/{id}",
+                HttpMethod.DELETE, null, Void.class, savedUsuario.getId());
+
+        Assertions.assertThat(usuarioResponseEntity).isNotNull();
+
+        Assertions.assertThat(usuarioResponseEntity.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
 }
